@@ -75,10 +75,10 @@
   (terpri)
   (cond ((is-solved? board) board)
 	((is-valid? board)
-	 (let ((new-board (copy-board board)))
-	   (loop for i from 0 to 8
-		 do (loop for j from 0 to 8
-			  do (when (= (get-elem i j new-board) 0)
-			       (loop for k from 1 to 9
-				     do (set-elem i j k new-board)
+	 (loop for i from 0 to 8
+	       do (loop for j from 0 to 8
+			do (when (= (get-elem i j board) 0)
+			     (loop for k from 1 to 9
+				   do (let ((new-board (copy-board board)))
+					(set-elem i j k new-board)
 					(solve new-board)))))))))
