@@ -47,6 +47,7 @@ int** get_squares (int board[9][9]) {
 	return squares;
 }
 
+
 void update_squares (int** rows, int** squares) {
 	for (int l = 0; l < 3; ++l) {
 		for (int k = 0; k < 3; ++k) {
@@ -66,6 +67,9 @@ void update(int i, int j, int new_elem, sudoku_board* board) {
 }
 
 void copy(sudoku_board* new_board, sudoku_board* old_board) {
+	new_board->rows = (int**) malloc(9 * sizeof(int*));
+	new_board->cols = (int**) malloc(9 * sizeof(int*));
+	new_board->squares = (int**) malloc(9 * sizeof(int*));
 	for (int i = 0; i < 9; ++i) {
 		new_board->rows[i] = (int *) malloc(9 * sizeof(int*));
 		new_board->cols[i] = (int *) malloc(9 * sizeof(int*));
@@ -94,16 +98,6 @@ sudoku_board* init_board (int board[9][9]){
 	new_board->cols = get_cols(board);
 	new_board->squares = get_squares(board);
 	return new_board;
-}
-
-void print_rows (sudoku_board* board) {
-	for (int i = 0; i < 9; ++i) {
-		for (int j = 0; j < 9; ++j) {
-			printf("%d ", board->rows[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
 }
 
 void print (int** matrix) {
@@ -164,16 +158,18 @@ bool is_solved (sudoku_board* board) {
 }
 
 void solve (sudoku_board* board) {
-	print_board(board);
-	if (is_solved(board)) print_board(board);
-	if (is_valid(board)) {
-		sudoku_board* new_board = (sudoku_board *) malloc(sizeof(sudoku_board));
-		copy(new_board, board);
-		for (int i = 0; i < 9; ++i) {
-			for (int j = 0; j < 9; ++j) {
-				if (new_board->rows[i][j] == 0) {
-					for (int k = 1; k <= 9; ++k) {
-						update(i, j, k, new_board);
+	if (is_solved(board)) {
+		print_board(board);
+		return;
+	}
+	sudoku_board* new_board = (sudoku_board *) malloc(sizeof(sudoku_board));
+	copy(new_board, board);
+	for (int i = 0; i < 9; ++i) {
+		for (int j = 0; j < 9; ++j) {
+			if (new_board->rows[i][j] == 0) {
+				for (int k = 1; k <= 9; ++k) {
+					update(i, j, k, new_board);
+					if (is_valid (new_board)) {
 						solve(new_board);
 					}
 				}
