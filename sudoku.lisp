@@ -40,7 +40,7 @@
 
 (defun reduce-and (l)
   (cond ((null l) t)
-	(t (and (first l) (list-and (rest l))))))
+	(t (and (first l) (reduce-and (rest l))))))
 
 (defun is-valid? (board)
   (reduce-and (loop for l in (get-rows-cols-squares board)
