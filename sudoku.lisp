@@ -1,65 +1,58 @@
-(defun copy (board)
-  (loop for row in board
-	collect (loop for entry in row
-		      collect entry)))
-
 (defun print-board (board)
   (loop for row in board
-	do (loop for num in row
-		 do (write num)
+	do (loop for elem in row
+		 do (write elem)
 		    (write-string " "))
 	   (terpri))
   (terpri))
 
-(defun get-cols (board)
-  (loop for i from 0 to 8
+(defun copy (board) (loop for row in board collect (copy-list row)))
+
+(defun cols (board)
+  (loop for i from 0 below 9
 	collect (loop for row in board
-		      collect (nth i row))))
+		     collect (nth i row))))
 
-(defun get-rows-from (i j board)
-  (loop for num from i to j
-	collect (nth num board)))
+(defun squares (board)
+  (loop for i from 0 below 3
+	append (loop for j from 0 below 3
+		     collect (loop for m from (* i 3) below (+ (* i 3) 3)
+				   append (loop for n from (* j 3) below (+ (* j 3) 3)
+						collect (nth n (nth m board)))))))
 
-(defun get-square (i j board)
-  (loop for row in (get-rows-from (* i 3) (+ (* i 3) 2) board)
-	append (loop for k from 0 to 2
-		     collect (nth (+ k (* j 3)) row))))
+(defun rows-cols-squares (board)
+  (append board (cols board) (squares board)))
 
-(defun get-squares (board)
-  (loop for i from 0 to 2
-	append (loop for j from 0 to 2
-		     collect (get-square i j board))))
-
-(defun get-rows-cols-squares (board)
-  (append board (get-all-cols board) (get-all-squares board)))
-
-(defun has-duplicates? (l)
+(defun duplicates? (l)
   (cond ((null l) nil)
-	((= (first l) 0) (has-duplicates? (rest l))) ;; ignore repeated 0's
-	(t (or (not (null (member (first l) (rest l)))) (has-duplicates? (rest l))))))
+	((not (null (member (first l) (rest l)))) t)
+	(t (or nil (duplicates? (rest l))))))
 
-(defun reduce-and (l)
-  (cond ((null l) t)
-	(t (and (first l) (reduce-and (rest l))))))
+(defun contains-1-to-9? (l)
+  (equal (sort (copy-list l) (lambda (x y) (< x y)))
+	 '(1 2 3 4 5 6 7 8 9)))
 
-(defun is-valid? (board)
-  (reduce-and (loop for l in (get-rows-cols-squares board)
-		  collect (not (has-duplicates? l)))))
+(defun remove-zeros (l) (remove-if (lambda (x) (= x 0)) l))
 
-(defun is-complete? (board)
-  (let ((complete '(1 2 3 4 5 6 7 8 9)))
-    (reduce-and (loop for l in (get-rows-cols-squares board)
-		    collect (equal (sort (copy-list l) #'<)
-				   complete)))))
+(defun and-each-element (l) (every #'identity l))
+
+(defun valid? (board)
+  (and-each-element (loop for l in (rows-cols-squares board)
+			  collect (not (duplicates? (remove-zeros l))))))
+
+(defun solved? (board)
+  (and-each-element (loop for l in (rows-cols-squares board)
+			  collect (contains-1-to-9? l))))
 
 (defun solve (board)
-  (cond ((is-complete? board) (print-board board))
-	(t (loop named outer for i from 0 to 8
-		 do (loop for j from 0 to 8
+  (cond ((solved? board) (print board))
+	(t (loop named outer for i from 0 below 9
+		 do (loop for j from 0 below 9
 			  do (if (= (nth j (nth i board)) 0)
-				 (progn (loop for num from 1 to 9
-					     do (let ((new-board (copy board)))
-						  (setf (nth j (nth i new-board)) num)
-						  (if (is-valid? new-board)
-						      (solve new-board))))
-					(return-from outer))))))))
+				 (progn (loop for k from 1 to 9
+					      do (let ((new-board (copy board)))
+						   (setf (nth j (nth i new-board)) k)
+						   (if (valid? new-board)
+						       (solve new-board))))
+					(return-from solve))))))))
+
